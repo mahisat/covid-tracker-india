@@ -77,7 +77,7 @@ export const apiCall = async ({
   }
 
   function onSuccess(data) {
-    console.log('data onsuccess', data);
+    // console.log('data onsuccess', data);
     if (types && types.success) {
       dispatch({type: types.success, payload: data, meta});
     }
