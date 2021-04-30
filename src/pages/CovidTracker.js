@@ -1,14 +1,32 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchCovidData} from '../actions';
+import MyDropdown from '../components/MyDropdown';
 function CovidTracker() {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(fetchCovidData());
   }, []);
-  const data = useSelector(state => state.CovidTrackerReducer);
-  console.log('data', JSON.stringify(data));
+  const [state, setSelectedState] = useState('Total');
+  const {covidData} = useSelector(state => state.CovidTrackerReducer);
+  const stateWiseData = covidData?.statewise;
+  const stateList =
+    stateWiseData?.length > 0 ? stateWiseData.map(state => state.state) : [];
+  const filteredData =
+    stateWiseData?.length > 0
+      ? stateWiseData.filter(item => state == item.state)
+      : [];
+  const onDropDownChange = (name, value) => {
+    setSelectedState(value);
+  };
+  const {
+    active,
+    confirmed,
+    deaths,
+    lastupdatedtime,
+    recovered,
+  } = filteredData[0];
   return (
     <View style={{flex: 1}}>
       <View
@@ -23,12 +41,19 @@ function CovidTracker() {
         <View
           style={{
             flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
           }}>
-          <View>
+          <View style={{flex: 0.5, alignItems: 'center'}}>
             <Text>State</Text>
           </View>
-          <View>
-            <Text>Drop Down</Text>
+          <View style={{flex: 0.5}}>
+            <MyDropdown
+              value={state}
+              name="state"
+              onChange={onDropDownChange}
+              data={stateList}
+            />
           </View>
         </View>
       </View>
@@ -39,7 +64,7 @@ function CovidTracker() {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Text>As on 08/06/2020 10:54:46</Text>
+        <Text>As on {lastupdatedtime}</Text>
         <View
           style={{
             flexDirection: 'row',
@@ -51,7 +76,7 @@ function CovidTracker() {
             <Text>Confirmed</Text>
           </View>
           <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>100</Text>
+            <Text>{confirmed}</Text>
           </View>
         </View>
         <View
@@ -62,24 +87,10 @@ function CovidTracker() {
             marginVertical: 10,
           }}>
           <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>Confirmed</Text>
+            <Text>Active</Text>
           </View>
           <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>100</Text>
-          </View>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignContent: 'center',
-            marginVertical: 10,
-          }}>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>Confirmed</Text>
-          </View>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>100</Text>
+            <Text>{active}</Text>
           </View>
         </View>
         <View
@@ -90,10 +101,24 @@ function CovidTracker() {
             marginVertical: 10,
           }}>
           <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>Confirmed</Text>
+            <Text>Recovered</Text>
           </View>
           <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>100</Text>
+            <Text>{recovered}</Text>
+          </View>
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignContent: 'center',
+            marginVertical: 10,
+          }}>
+          <View style={{flex: 0.5, alignItems: 'center'}}>
+            <Text>Death</Text>
+          </View>
+          <View style={{flex: 0.5, alignItems: 'center'}}>
+            <Text>{deaths}</Text>
           </View>
         </View>
       </View>
