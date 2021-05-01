@@ -1,18 +1,30 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text} from 'react-native';
+import React, {Fragment, useEffect, useState} from 'react';
+import {View, Text, ActivityIndicator, Button, StyleSheet} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchCovidData} from '../actions';
 import MyDropdown from '../components/MyDropdown';
 function CovidTracker() {
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(fetchCovidData());
+    getCovidData();
   }, []);
+  const getCovidData = () => {
+    dispatch(fetchCovidData());
+  };
+
   const [state, setSelectedState] = useState('Total');
-  const {covidData} = useSelector(state => state.CovidTrackerReducer);
+  const {covidData, isFetchLoading, isFetchNetworkFailed} = useSelector(
+    state => state.CovidTrackerReducer,
+  );
   const stateWiseData = covidData?.statewise;
   const stateList =
-    stateWiseData?.length > 0 ? stateWiseData.map(state => state.state) : [];
+    stateWiseData?.length > 0
+      ? stateWiseData.map(state =>
+          state.state == 'Total'
+            ? {name: 'All', value: state.state}
+            : {name: state.state, value: state.state},
+        )
+      : [];
   const filteredData =
     stateWiseData?.length > 0
       ? stateWiseData.filter(item => state == item.state)
@@ -21,31 +33,46 @@ function CovidTracker() {
     setSelectedState(value);
   };
   const {
-    active,
-    confirmed,
-    deaths,
-    lastupdatedtime,
-    recovered,
-  } = filteredData[0];
+    active = '',
+    confirmed = '',
+    deaths = '',
+    lastupdatedtime = '',
+    recovered = '',
+  } = filteredData[0] || {};
+  const Row = props => {
+    const {label, value} = props;
+    return (
+      <View style={styles.dataContainer}>
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <Text style={{fontSize: 16}}>{label}</Text>
+        </View>
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <Text style={{fontSize: 16}}>{value}</Text>
+        </View>
+      </View>
+    );
+  };
   return (
     <View style={{flex: 1}}>
       <View
         style={{
           flex: 0.5,
-          backgroundColor: 'red',
+          backgroundColor: '#ccc',
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Text style={{fontSize: 16, fontWeight: 'bold'}}>Covid 19 Metrics</Text>
-        <Text style={{fontSize: 16}}>India</Text>
+        <Text style={{fontSize: 16, fontWeight: 'bold', marginVertical: 20}}>
+          Covid 19 Metrics
+        </Text>
+        <Text style={{fontSize: 16, marginBottom: 20}}>India</Text>
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'center',
             alignItems: 'center',
           }}>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>State</Text>
+          <View style={{flex: 0.3, alignItems: 'center'}}>
+            <Text style={{fontSize: 16}}>State</Text>
           </View>
           <View style={{flex: 0.5}}>
             <MyDropdown
@@ -60,69 +87,47 @@ function CovidTracker() {
       <View
         style={{
           flex: 0.5,
-          backgroundColor: 'blue',
-          justifyContent: 'center',
-          alignItems: 'center',
         }}>
-        <Text>As on {lastupdatedtime}</Text>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignContent: 'center',
-            marginVertical: 10,
-          }}>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>Confirmed</Text>
+        {isFetchLoading && <ActivityIndicator size="large" color={'blue'} />}
+        {!isFetchLoading && isFetchNetworkFailed && (
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <Text style={{fontWeight: 'bold', fontSize: 18, marginBottom: 30}}>
+              Some Failure Occured!
+            </Text>
+            <Button
+              onPress={() => getCovidData()}
+              title="Try Again"
+              color="blue"
+            />
           </View>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>{confirmed}</Text>
+        )}
+        {!isFetchLoading && !isFetchNetworkFailed && (
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Text
+              style={{textAlign: 'center', marginVertical: 20, fontSize: 16}}>
+              As on {lastupdatedtime}
+            </Text>
+            <Row label={'Confirmed'} value={confirmed} />
+            <Row label={'Active'} value={active} />
+            <Row label={'Recovered'} value={recovered} />
+            <Row label={'Death'} value={deaths} />
           </View>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignContent: 'center',
-            marginVertical: 10,
-          }}>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>Active</Text>
-          </View>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>{active}</Text>
-          </View>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignContent: 'center',
-            marginVertical: 10,
-          }}>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>Recovered</Text>
-          </View>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>{recovered}</Text>
-          </View>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignContent: 'center',
-            marginVertical: 10,
-          }}>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>Death</Text>
-          </View>
-          <View style={{flex: 0.5, alignItems: 'center'}}>
-            <Text>{deaths}</Text>
-          </View>
-        </View>
+        )}
       </View>
     </View>
   );
 }
 export default CovidTracker;
+
+const styles = StyleSheet.create({
+  dataContainer: {
+    flexDirection: 'row',
+    marginVertical: 10,
+  },
+});

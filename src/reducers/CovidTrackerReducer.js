@@ -16,7 +16,7 @@ export default (state = INITIAL_STATE, action) => {
       return state;
 
     case COVID_DATA_FETCH_START:
-      return {...state, loginLoading: true};
+      return {...state, isFetchLoading: true};
     case COVID_DATA_FETCH_SUCCESS:
       return {
         ...state,
